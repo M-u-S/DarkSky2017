@@ -1,0 +1,9 @@
+display.visualizations.custom.DarkSky2017.geo_heatmap.lat = <float>
+display.visualizations.custom.DarkSky2017.geo_heatmap.lng = <float>
+display.visualizations.custom.DarkSky2017.geo_heatmap.zoom = <number>
+display.visualizations.custom.DarkSky2017.geo_heatmap.tiles = <string>
+display.visualizations.custom.DarkSky2017.geo_heatmap.scaleRadius = <boolean>
+display.visualizations.custom.DarkSky2017.geo_heatmap.useLocalExtrema = <boolean>
+display.visualizations.custom.DarkSky2017.geo_heatmap.minOpacity = <number>
+display.visualizations.custom.DarkSky2017.geo_heatmap.maxOpacity = <number>
+display.visualizations.custom.DarkSky2017.geo_heatmap.gradientCfg = <string>
