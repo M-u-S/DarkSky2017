@@ -1,0 +1,89 @@
+<form stylesheet="dark.css" hideFooter="true" hideFilters="true" hideAppBar="true">
+  <label>Dark Sky 2017 - Location</label>
+  <description>Please verify the location we found for you or use the dropdown filters to select a location you are right now or you want to go, these are passed down to the next dash board as tokens</description>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="country" searchWhenChanged="true">
+      <label>Select country:</label>
+      <fieldForLabel>country</fieldForLabel>
+      <fieldForValue>country</fieldForValue>
+      <search>
+        <query>|  inputlookup cities 
+| dedup country 
+| table country</query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+      <prefix/>
+      <suffix/>
+    </input>
+    <input type="dropdown" token="city" searchWhenChanged="true">
+      <label>Select city:</label>
+      <fieldForLabel>city</fieldForLabel>
+      <fieldForValue>cords</fieldForValue>
+      <search>
+        <query>| inputlookup cities 
+| search country="$country$" 
+| eval cords="lat=". lat .":lon=". lon .":country=". country .""
+| dedup city
+| table city country cords lat lon</query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <set token="lat_tok">$row.lat$</set>
+        <set token="lon_tok">$row.lon$</set>
+      </change>
+    </input>
+  </fieldset>
+  <row depends="$city$,$country$">
+    <panel>
+      <map>
+        <title>We found this location:</title>
+        <search>
+          <query>index=_internal sourcetype=splunkd_ui_access DarkSky2017 [ rest /services/authentication/current-context/context | table username | rename username as user ] 
+| iplocation clientip
+| geostats values(Country) AS country count | table latitude longitude count country| dedup count</query>
+          <earliest>-2min</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="height">800</option>
+        <option name="mapping.map.center">(0,0)</option>
+        <option name="mapping.map.scrollZoom">0</option>
+        <option name="mapping.map.zoom">5</option>
+        <option name="mapping.tileLayer.url">http://192.168.56.101:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
+        <option name="mapping.type">marker</option>
+        <drilldown>
+          <link target="_self">/app/DarkSky2017/DarkSky-Main?lat=$click.lat.value$&amp;lon=$click.lon.value$&amp;country="$row.country$"</link>
+        </drilldown>
+      </map>
+    </panel>
+  </row>
+  <row depends="$city$,$country$">
+    <panel>
+      <map>
+        <title>Please select your location using the drop down filters:</title>
+        <search>
+          <query>| makeresults 
+| eval _raw="$city$"
+| extract pairdelim=":" kvdelim="="
+| geostats values(country) AS country count | table latitude longitude count country</query>
+          <earliest>-1min</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="height">800</option>
+        <option name="mapping.map.center">($lat_tok$,$lon_tok$)</option>
+        <option name="mapping.map.scrollZoom">0</option>
+        <option name="mapping.map.zoom">5</option>
+        <option name="mapping.tileLayer.url">http://192.168.56.101:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
+        <option name="mapping.type">marker</option>
+        <drilldown>
+          <link target="_self">/app/DarkSky2017/DarkSky-Main?lat=$click.lat.value$&amp;lon=$click.lon.value$&amp;country="$row.country$"</link>
+        </drilldown>
+      </map>
+    </panel>
+  </row>
+</form>

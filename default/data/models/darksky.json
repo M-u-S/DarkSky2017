@@ -1,0 +1,173 @@
+{
+    "modelName": "darksky",
+    "displayName": "darksky",
+    "description": "",
+    "objectSummary": {
+        "Event-Based": 1,
+        "Transaction-Based": 0,
+        "Search-Based": 0
+    },
+    "objects": [
+        {
+            "objectName": "darksky_RootEvent",
+            "displayName": "darksky_RootEvent",
+            "parentName": "BaseEvent",
+            "fields": [
+                {
+                    "fieldName": "country",
+                    "owner": "darksky_RootEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "country",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "lat",
+                    "owner": "darksky_RootEvent",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "lat",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "latitude",
+                    "owner": "darksky_RootEvent",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "latitude",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "lights",
+                    "owner": "darksky_RootEvent",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "lights",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "lon",
+                    "owner": "darksky_RootEvent",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "lon",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "longitude",
+                    "owner": "darksky_RootEvent",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "longitude",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "_time",
+                    "owner": "BaseEvent",
+                    "type": "timestamp",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "_time",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "host",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "host",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "source",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "source",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "sourcetype",
+                    "owner": "BaseEvent",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "sourcetype",
+                    "comment": ""
+                }
+            ],
+            "calculations": [
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "bortle",
+                            "owner": "darksky_RootEvent",
+                            "type": "number",
+                            "fieldSearch": "bortle=*",
+                            "required": true,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "displayName": "bortle",
+                            "comment": ""
+                        }
+                    ],
+                    "calculationID": "nj39udnrjc",
+                    "owner": "darksky_RootEvent",
+                    "editable": true,
+                    "comment": "",
+                    "calculationType": "Eval",
+                    "expression": "case(lights>(255/9)*8, 9,lights>(255/9)*7, 8,lights>(255/9)*6, 7,lights>(255/9)*5, 6,lights>(255/9)*4, 5,lights>(255/9)*3, 4,lights>(255/9)*2, 3,lights>(255/9)*1, 2,lights<(255/9), 1,1=1, \"unknown\")"
+                }
+            ],
+            "constraints": [
+                {
+                    "search": "tag=\"darksky\"",
+                    "owner": "darksky_RootEvent"
+                }
+            ],
+            "lineage": "darksky_RootEvent"
+        }
+    ],
+    "objectNameList": [
+        "darksky_RootEvent"
+    ]
+}

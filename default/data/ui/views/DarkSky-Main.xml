@@ -1,0 +1,448 @@
+<form stylesheet="dark.css" script="2layout.js,autodiscover.js,weather.js" hideFooter="true" hideAppBar="true" hideEdit="false" hideFilters="true">
+  <label>Hey Stargazer,</label>
+  <search id="base_search">
+    <query>
+      | tstats values(darksky_RootEvent.lights) AS lights values(darksky_RootEvent.bortle) AS bortle from datamodel=darksky WHERE darksky_RootEvent.country=$country$ AND darksky_RootEvent.lights="*" AND darksky_RootEvent.latitude &gt; 
+    [| stats count 
+    | eval num=$lat$ - 1 
+    | rename num AS search] AND darksky_RootEvent.latitude &lt; 
+    [| stats count 
+    | eval num=$lat$ + 1 
+    | rename num AS search] AND darksky_RootEvent.longitude &gt; 
+    [| stats count 
+    | eval num=$lon$ - 2 
+    | rename num AS search] AND darksky_RootEvent.longitude &lt; 
+    [| stats count 
+    | eval num=$lon$ + 2 
+    | rename num AS search] by darksky_RootEvent.latitude darksky_RootEvent.longitude darksky_RootEvent.country 
+| rename darksky_RootEvent.country AS country darksky_RootEvent.latitude AS lat darksky_RootEvent.longitude AS lon darksky_RootEvent.country AS country 
+| eval src_lat=$lat$, src_lon=$lon$ 
+| stats values(bortle) AS bortle values(src_lat) AS src_lat values(src_lon) AS src_lon max(lights) AS max_lights min(lights) AS min_lights by lat lon 
+| `distance(src_lat,src_lon,lat,lon)` | `bearing(lat,lon,src_lat,src_lon)` 
+    </query>
+  </search>
+  <search id="base_search2">
+    <query>
+      | tstats sum(darksky_RootEvent.lights) AS lights from datamodel=darksky WHERE darksky_RootEvent.country="*" AND darksky_RootEvent.lights="*" by darksky_RootEvent.country 
+      | rename darksky_RootEvent.country AS Country
+    </query>
+  </search>
+  <search id="moon_schedule">
+    <query>
+      | stats count 
+      | eval month = strftime(now(), "%B") 
+      | table month 
+      | lookup schedule month 
+      | table month time moon</query>
+    <earliest>-15m</earliest>
+    <latest>now</latest>
+  </search>
+  <search id="moon_phases">
+    <query>
+      | get me=moon 
+      | eval check = relative_time(now(), "-6d@d") 
+      | where _time &gt; check 
+      | head 2 
+      | eval phase_time=phase ." starting at ". strftime(_time,"%d-%m-%y %H:%M:%S") 
+      | table phase_time 
+      | transpose 
+      | rename "row 1" AS current "row 2" AS next 
+      | table current next 
+      | rex field=current "(?&lt;current&gt;^.+?)\sstarting"
+    </query>
+  </search>
+  <!-- <search base="base_search" id="radar_max_search">
+    <query>
+      | stats max(eval(max_lights/100)) AS max by bearing 
+      | makecontinuous bearing start=0 end=360 span=20 
+      | fillnull max 
+      | sort - bearing
+    </query>
+  </search>
+  <search base="base_search" id="radar_min_search">
+    <query>
+      | stats min(eval(min_lights/100)) AS min by bearing 
+      | makecontinuous bearing start=0 end=360 span=20 
+      | sort - bearing 
+      | eval min=if(isnull(min), 2.55, min)
+    </query>
+  </search> -->
+  <search id="current_weather">
+    <query>
+      | get me=weather forecast=yes lat=$lat$ lon=$lon$ | head 1
+      | table clouds	humidity	pressure	temp	weather.desc	weather.icon	weather.id	weather.main	wind.deg	wind.speed
+    </query>
+  </search>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="moon_schedule_month" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="moon_schedule">
+        <query>| table month</query>
+      </search>
+      <fieldForLabel>month</fieldForLabel>
+      <fieldForValue>month</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="moon_schedule_time" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="moon_schedule">
+        <query>| table time</query>
+      </search>
+      <fieldForLabel>time</fieldForLabel>
+      <fieldForValue>time</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="moon_schedule_moon" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="moon_schedule">
+        <query>| table moon</query>
+      </search>
+      <fieldForLabel>moon</fieldForLabel>
+      <fieldForValue>moon</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="moon_phases_current" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="moon_phases">
+        <query>| table current</query>
+      </search>
+      <fieldForLabel>current</fieldForLabel>
+      <fieldForValue>current</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <change>
+        <condition match="$moon_phases_current$==&quot;First Quarter&quot;">
+          <set token="moon_phase_image">first_quarter</set>
+        </condition>
+        <condition match="$moon_phases_current$==&quot;Last Quarter&quot;">
+          <set token="moon_phase_image">last_quarter</set>
+        </condition>
+        <condition match="$moon_phases_current$==&quot;New Moon&quot;">
+          <set token="moon_phase_image">new_moon</set>
+        </condition>
+        <condition match="$moon_phases_current$==&quot;Full Moon&quot;">
+          <set token="moon_phase_image">full_moon</set>
+        </condition>
+      </change>
+    </input>
+    <input type="dropdown" token="moon_phases_next" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="moon_phases">
+        <query>| table next</query>
+      </search>
+      <fieldForLabel>next</fieldForLabel>
+      <fieldForValue>next</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="current_weather_temp" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="current_weather">
+        <query>| table temp</query>
+      </search>
+      <fieldForLabel>temp</fieldForLabel>
+      <fieldForValue>temp</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="current_weather_weather.icon" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="current_weather">
+        <query>| table weather.icon</query>
+      </search>
+      <fieldForLabel>weather.icon</fieldForLabel>
+      <fieldForValue>weather.icon</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="current_weather_weather.desc" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="current_weather">
+        <query>| table weather.desc</query>
+      </search>
+      <fieldForLabel>weather.desc</fieldForLabel>
+      <fieldForValue>weather.desc</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="current_weather_wind.speed" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="current_weather">
+        <query>| table wind.speed</query>
+      </search>
+      <fieldForLabel>wind.speed</fieldForLabel>
+      <fieldForValue>wind.speed</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="current_weather_wind.deg" searchWhenChanged="true" depends="$justHideMe$">
+      <label>last_update</label>
+      <search base="current_weather">
+        <query>| table wind.deg</query>
+      </search>
+      <fieldForLabel>wind.deg</fieldForLabel>
+      <fieldForValue>wind.deg</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <table style="width:100%">
+         <tr>
+          <td style="width:70%"> 
+            In <b>$moon_schedule_month$</b> it is possible to spot the center of the Milky Way during: <b>$moon_schedule_time$</b> and while the moon is in this phase: <b>$moon_schedule_moon$</b>.<br/>
+            The current moon phase is <b>$moon_phases_current$</b> with the next moon phase <b>$moon_phases_next$</b>
+              <br/>
+            The current temperatur at your loction is <b>$current_weather_temp$</b> degrees celsius and <b>$current_weather_weather.desc$</b> with winds of <b>$current_weather_wind.speed$</b> km/h from the direction of <b>$current_weather_wind.deg$</b> degrees.
+          </td>
+          <td style="width:15%">
+            Moon phase is : <img src="/static/app/DarkSky2017/$moon_phase_image$.png" width="25%" alt="$moon_phases_current$"/>
+          </td>
+          <td style="width:15%">
+            Weather is : <img src="http://openweathermap.org/img/w/$current_weather_weather.icon$.png" width="25%" alt="$current_weather_weather.desc$"/>
+          </td>
+         </tr>
+        </table>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table id="weather_table1">
+        <search>
+          <query>| get me=weather forecast=yes lat=$lat$ lon=$lon$ 
+| rename weather.icon AS weather 
+| table _time weather weather.desc temp humidity wind.speed wind.deg 
+| head 7 | eval "wind.deg"=round('wind.deg',0),"wind.speed"=round('wind.speed',0)</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Bortle Light pollution based on your location in $country$</title>
+      <viz type="geo_heatmap_app.geo_heatmap">
+        <search base="base_search">
+          <query>
+            | geostats max(bortle) AS count 
+            | table latitude longitude count 
+            | stats max(count) as count by latitude longitude 
+            | eval r = (random()%40)
+            | table latitude longitude count r
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="geo_heatmap_app.geo_heatmap.customAttribution">(c) 2017 - MuS</option>
+        <option name="geo_heatmap_app.geo_heatmap.gradientCfg">standard</option>
+        <option name="geo_heatmap_app.geo_heatmap.lat">$lat$</option>
+        <option name="geo_heatmap_app.geo_heatmap.lng">$lon$</option>
+        <option name="geo_heatmap_app.geo_heatmap.maxOpacity">70</option>
+        <option name="geo_heatmap_app.geo_heatmap.minOpacity">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.radius">20</option>
+        <option name="geo_heatmap_app.geo_heatmap.scaleRadius">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.showCurrentTime">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.tiles">dark_tiles</option>
+        <option name="geo_heatmap_app.geo_heatmap.useGlobalExtremas">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.useLocalExtrema">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.useTimeSlider">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.zoom">8</option>
+      </viz>
+    </panel>
+    <panel>
+      <title>NASA Light pollution based on your location in $country$</title>
+      <viz type="geo_heatmap_app.geo_heatmap">
+        <search base="base_search">
+          <query>
+            | geostats max(max_lights) AS count 
+            | table latitude longitude count 
+            | stats max(count) as count by latitude longitude 
+            | eval r = (random()%40)
+            | table latitude longitude count r
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="geo_heatmap_app.geo_heatmap.customAttribution">(c) 2017 - MuS</option>
+        <option name="geo_heatmap_app.geo_heatmap.gradientCfg">standard</option>
+        <option name="geo_heatmap_app.geo_heatmap.lat">$lat$</option>
+        <option name="geo_heatmap_app.geo_heatmap.lng">$lon$</option>
+        <option name="geo_heatmap_app.geo_heatmap.maxOpacity">70</option>
+        <option name="geo_heatmap_app.geo_heatmap.minOpacity">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.radius">20</option>
+        <option name="geo_heatmap_app.geo_heatmap.scaleRadius">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.showCurrentTime">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.tiles">dark_tiles</option>
+        <option name="geo_heatmap_app.geo_heatmap.useGlobalExtremas">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.useLocalExtrema">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.useTimeSlider">0</option>
+        <option name="geo_heatmap_app.geo_heatmap.zoom">8</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Closest location with lowest Bortle scale</title>
+      <single>
+        <title>Distance</title>
+        <search base="base_search">
+          <query>| stats min(min_lights) AS lights values(lat) AS lat values(lon) AS lon values(src_lat) AS src_lat values(src_lon) AS src_lon by distance 
+| sort lights distance 
+| head 1 
+| table distance</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x6db7c6","0x6db7c6"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">km</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Closest location with lowest Bortle scale</title>
+      <single>
+        <title>Azimuth</title>
+        <search base="base_search">
+          <query>| stats values(bearing) AS bearing min(min_lights) AS lights values(lat) AS lat values(lon) AS lon values(src_lat) AS src_lat values(src_lon) AS src_lon by distance 
+| sort lights distance 
+| head 1 
+| table bearing</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x6db7c6","0x6db7c6"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">°</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Azimuth you should take a photo!</title>
+      <single>
+        <title>between:</title>
+        <search base="base_search">
+          <query>| geostats latfield=lat longfield=lon values(src_lat) values(src_lon) sum(bortle) 
+| stats values("values(src_lat)") AS src_lat values("values(src_lon)") AS src_lon max(latitude) AS max_lat max(longitude) AS max_lon by "sum(bortle)" 
+| sort - "sum(bortle)" 
+| head 1 
+| `bearing(src_lat,src_lon,max_lat,max_lon)` 
+| eval min=bearing-25, max=bearing+25, bearing=min ." - ". max 
+| table bearing</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">°</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Azimuth you should  NOT take a photo!</title>
+      <single>
+        <title>between:</title>
+        <search base="base_search">
+          <query>| geostats latfield=lat longfield=lon values(src_lat) values(src_lon) sum(bortle) 
+| stats values("values(src_lat)") AS src_lat values("values(src_lon)") AS src_lon max(latitude) AS max_lat max(longitude) AS max_lon by "sum(bortle)" 
+| sort - "sum(bortle)" 
+| head 1 
+| `bearing(max_lat,max_lon,src_lat,src_lon)` 
+| eval min=bearing-25, max=bearing+25, bearing=min ." - ". max 
+| table bearing</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xd93f3c"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">°</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="location_tracker_app.location_tracker">
+        <title>Direction form Mapbox API</title>
+        <search base="base_search">
+          <query>| stats min(min_lights) AS lights values(lat) AS dest_lat values(lon) AS dest_lon values(src_lat) AS lat values(src_lon) AS lon by distance 
+| sort lights distance 
+| head 1 
+| get me=directions 
+| rename step_num AS _time, start.lat AS latitude, start.lon AS longitude
+| table _time latitude longitude</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="location_tracker_app.location_tracker.interval">10</option>
+        <option name="location_tracker_app.location_tracker.showTraces">1</option>
+        <option name="location_tracker_app.location_tracker.staticIcon">space-shuttle</option>
+        <option name="location_tracker_app.location_tracker.tileSet">dark_tiles</option>
+        <option name="refresh.display">progressbar</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most light pollution by Country</title>
+      <table>
+        <search base="base_search2">
+          <query>
+            | sort - lights 
+            | head 10
+          </query>
+        </search>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Least light pollution by Country</title>
+      <table>
+        <search base="base_search2">
+          <query>
+            | sort lights 
+            | head 10
+          </query>
+        </search>
+        <option name="dataOverlayMode">highlow</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="text" token="500" searchWhenChanged="true">
+        <label>500 rule - Enter your focal length in mm:</label>
+        <default>24</default>
+      </input>
+      <single>
+        <search>
+          <query>
+            | makeresults 
+            | eval _raw="Full Frame/1:Nikon/1.5:Canon/1.6" 
+            | extract pairdelim=":" kvdelim="/" 
+            | fields - _raw _time 
+            | transpose 
+            | rename column AS "Sensor" "row 1" AS "crop factor" 
+            | eval "max shutter"=round(500/($500$*'crop factor'),0) 
+            | sort - "max shutter"
+            | search Sensor!=_kv
+            | stats values("max shutter") AS "max shutter" by Sensor
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xffffff","0xffffff"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="unit">secs</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+</form>
