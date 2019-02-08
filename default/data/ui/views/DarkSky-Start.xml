@@ -35,7 +35,7 @@
       </change>
     </input>
   </fieldset>
-  <row depends="$city$,$country$">
+  <!-- May not be needed at all <row depends="$city$,$country$">
     <panel>
       <map>
         <title>We found this location:</title>
@@ -52,14 +52,14 @@
         <option name="mapping.map.center">(0,0)</option>
         <option name="mapping.map.scrollZoom">0</option>
         <option name="mapping.map.zoom">5</option>
-        <option name="mapping.tileLayer.url">http://192.168.56.101:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
+        <option name="mapping.tileLayer.url">http://crux:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
         <option name="mapping.type">marker</option>
         <drilldown>
           <link target="_self">/app/DarkSky2017/DarkSky-Main?lat=$click.lat.value$&amp;lon=$click.lon.value$&amp;country="$row.country$"</link>
         </drilldown>
       </map>
     </panel>
-  </row>
+  </row> -->
   <row depends="$city$,$country$">
     <panel>
       <map>
@@ -78,7 +78,7 @@
         <option name="mapping.map.center">($lat_tok$,$lon_tok$)</option>
         <option name="mapping.map.scrollZoom">0</option>
         <option name="mapping.map.zoom">5</option>
-        <option name="mapping.tileLayer.url">http://192.168.56.101:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
+        <option name="mapping.tileLayer.url">http://crux:8000/en-GB/static/app/DarkSky2017/darkmarble/{z}/{x}/{y}.png</option>
         <option name="mapping.type">marker</option>
         <drilldown>
           <link target="_self">/app/DarkSky2017/DarkSky-Main?lat=$click.lat.value$&amp;lon=$click.lon.value$&amp;country="$row.country$"</link>
