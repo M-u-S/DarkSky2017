@@ -27,6 +27,9 @@ You then need to download 5Gb of map tiles and light pollution data from
 https://mega.nz/#!byQTQQLa!TfMcjUn58gQoFCVUGl2AhjJZa-1eSt2YnKnOPmDrd4Q
 and manually unpack it into the already installed `DarkSky2017` app folder.
 
+In addition to get the moon and Mapbox API data, you also need to install the
+following app: https://splunkbase.splunk.com/app/3880 (v1.2.2 or later)
+
 
 **Configure:**
 
