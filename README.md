@@ -1,4 +1,4 @@
-**`DarkSky - Take a Talk Into the Art of Dark Sky Photography With a Splunk Ninja`**
+**DarkSky - Take a Talk Into the Art of Dark Sky Photography With a Splunk Ninja**
 
 This is the app used for my .conf2017 talk **IOT121001 - Take a Talk Into the Art of Dark Sky Photography With a Splunk Ninja**
 https://conf.splunk.com/conf-online.html?search=IOT121001#/
@@ -15,17 +15,19 @@ All the research made for this app and talk was based on Google research.
 
 **Install:**
 
-You will download 5Gb of map tiles and light pollution meta data from mega.co.nz
-
-
+Get the app from https://github.com/M-u-S/DarkSky2017 and install as any other
+Splunk app.
+You need to download 5Gb of map tiles and light pollution meta data from mega.co.nz
+https://mega.nz/#!n2ZFiKyK!7qkWtOOFs5zWGZeJV3tS1kvZkLqpdnNWSTazDuK15YA manually
+unpack it into the already installed app folder.
 
 **Configure:**
 
 foo
 
-**Debug**
+**Debug:**
 
-baz
+Nothing to see here, move along.
 
 **Support**
 
@@ -39,8 +41,8 @@ Github repository: https://github.com/M-u-S/TA-EDFS
 
 **Version**
 
-`Somewhen in 2015 : 0.1.0 Initial idea`
-`June 2017 : 1.0.0 Ready for .conf`
-`26. September 2017 : 1.0.1 Last minute panic changes just before the presentation`
-`October 2017 - February 2019 : ....`
-`8. February 2019 : 1.1.0 Finally it is ready to be published`
+`Somewhen in 2015 	: 0.1.0 Initial idea`  
+`June 2017 			: 1.0.0 Ready for .conf`  
+`26. September 2017 	: 1.0.1 Last minute panic changes just before the presentation`  
+`Oct 2017 - Feb 2019 : 1.0.1 ....`  
+`8. February 2019 	: 1.1.0 Finally it is ready to be published`
