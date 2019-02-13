@@ -20,15 +20,16 @@ anything is wrong ;)
 **Install:**
 
 Get the app from https://github.com/M-u-S/DarkSky2017 and install as any other
-Splunk app. There are two additional apps in the `install` folder that must be
+Splunk app.
+To get the moon, Mapbox API data you need to install the following
+app: https://splunkbase.splunk.com/app/3880 (v1.2.2 or later)
+
+There are two additional apps in the `install` folder that must be
 installed as well. They were slightly modified to work with the DarkSky app.
 
 You then need to download 5Gb of map tiles and light pollution data from
 https://mega.nz/#!byQTQQLa!TfMcjUn58gQoFCVUGl2AhjJZa-1eSt2YnKnOPmDrd4Q
 and manually unpack it into the already installed `DarkSky2017` app folder.
-
-In addition to get the moon and Mapbox API data, you also need to install the
-following app: https://splunkbase.splunk.com/app/3880 (v1.2.2 or later)
 
 
 **Configure:**
@@ -58,6 +59,9 @@ Nothing to see here, move along.
 This is an open source project, no support provided, but you can ask questions
 on answers.splunk.com and I will most likely answer it.
 Github repository: https://github.com/M-u-S/DarkSky2017
+
+I validate all my apps with appinspect and the log can be found in the README
+folder of each app.
 
 
 **Things to-do / Future ideas**
